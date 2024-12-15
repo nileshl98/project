@@ -1,245 +1,276 @@
 # File Store Service
 
-This repository contains a File Store Service that allows users to store, retrieve, update, and perform operations on text files using an HTTP server and a CLI client. Additionally, the project includes Kubernetes manifests for deploying the service to a Kubernetes/OpenShift cluster.
+The **File Store Service** is a simple HTTP-based file management system built using Flask. It supports various operations such as adding, updating, removing, listing files, counting words, and listing the most frequent words across all files stored on the server.
 
-## Features
-
-### Part 1: File Store Service
-
-1. **Add Files to the Store:**
-   - Command: `store add file1.txt file2.txt`
-   - Description: Upload files to the server. Fails if the file already exists.
-   - Bonus: Optimized to avoid uploading duplicate files.
-
-2. **List Files in the Store:**
-   - Command: `store ls`
-   - Description: List all files stored on the server.
-
-3. **Remove a File:**
-   - Command: `store rm file.txt`
-   - Description: Remove a file from the server.
-
-4. **Update Contents of a File:**
-   - Command: `store update file.txt`
-   - Description: Update the contents of a file or create it if absent.
-
-5. **File Operations:**
-   - **Word Count:** `store wc` returns the total word count across all files.
-   - **Frequent Words:** `store freq-words [--limit|-n 10] [--order=dsc|asc]` returns the most/least frequent words.
-
-### Part 2: Kubernetes/OpenShift Deployment
-- Kubernetes manifests provided to deploy the File Store Service to a Kubernetes cluster using Minikube or Kind.
+Additionally, the service can be deployed on a Kubernetes/OpenShift cluster using Minikube or kind for local clusters.
 
 ---
 
-## Lab Steps
+## Part 1: The File Store Service
 
-### Prerequisites
+### Features
 
-1. **Environment Setup:**
-   - Install Docker.
-   - Install Minikube or Kind for local Kubernetes cluster.
-   - Install `kubectl` CLI.
-   - Install Python 3.x or Node.js (based on your chosen language).
-
-2. **Clone the Repository:**
-   ```bash
-   git clone <repository-url>
-   cd file-store-service
-   ```
-
----
-
-### Step 1: Develop the File Store Service
-
-#### 1.1 Server Implementation
-
-1. **Install Dependencies:**
-   ```bash
-   pip install flask flask-restful
-   ```
-
-2. **Run the Server:**
-   ```bash
-   python server/app.py
-   ```
-
-#### 1.2 Client Implementation
-
-1. **Install Dependencies:**
-   ```bash
-   pip install requests
-   ```
-
-2. **Run the Client:**
-   ```bash
-   python client/cli.py
-   ```
+- **Add Files**: Upload files to the server using:
+  ```bash
+  store add file1.txt file2.txt
+  ```
+- **List Files**: View the list of files stored on the server using:
+  ```bash
+  store ls
+  ```
+- **Remove Files**: Delete files from the server with:
+  ```bash
+  store rm file.txt
+  ```
+- **Update Files**: Replace the content of an existing file with:
+  ```bash
+  store update file.txt
+  ```
+- **Word Count**: Get the total word count of all files stored on the server using:
+  ```bash
+  store wc
+  ```
+- **Frequent Words**: List the most frequent words across all stored files, sorted by frequency with:
+  ```bash
+  store freq-words
+  ```
 
 ---
 
-### Step 2: Test the Service
+### Requirements
 
-#### Commands
+To run this service, you need:
 
-1. **Add Files:**
-   ```bash
-   python client/cli.py add file1.txt file2.txt
-   ```
+- Python 3.x installed
+- Flask for the web server
+- Docker (optional, for containerization)
 
-2. **List Files:**
-   ```bash
-   python client/cli.py ls
-   ```
-
-3. **Remove a File:**
-   ```bash
-   python client/cli.py rm file.txt
-   ```
-
-4. **Update File:**
-   ```bash
-   python client/cli.py update file.txt
-   ```
-
-5. **Word Count:**
-   ```bash
-   python client/cli.py wc
-   ```
-
-6. **Frequent Words:**
-   ```bash
-   python client/cli.py freq-words --limit 5 --order asc
-   ```
-
----
-
-### Step 3: Containerize the Application
-
-1. **Create Dockerfile for Server:**
-   ```dockerfile
-   FROM python:3.9-slim
-   WORKDIR /app
-   COPY ./server /app
-   RUN pip install -r requirements.txt
-   CMD ["python", "app.py"]
-   ```
-
-2. **Build and Push Docker Image:**
-   ```bash
-   docker build -t <dockerhub-username>/file-store-service:latest .
-   docker push <dockerhub-username>/file-store-service:latest
-   ```
-
----
-
-### Step 4: Deploy to Kubernetes
-
-#### 4.1 Prepare Kubernetes Manifests
-
-1. **Deployment YAML:**
-   ```yaml
-   apiVersion: apps/v1
-   kind: Deployment
-   metadata:
-     name: file-store-service
-   spec:
-     replicas: 2
-     selector:
-       matchLabels:
-         app: file-store-service
-     template:
-       metadata:
-         labels:
-           app: file-store-service
-       spec:
-         containers:
-         - name: file-store-service
-           image: <dockerhub-username>/file-store-service:latest
-           ports:
-           - containerPort: 5000
-   ```
-
-2. **Service YAML:**
-   ```yaml
-   apiVersion: v1
-   kind: Service
-   metadata:
-     name: file-store-service
-   spec:
-     type: NodePort
-     selector:
-       app: file-store-service
-     ports:
-       - protocol: TCP
-         port: 80
-         targetPort: 5000
-   ```
-
-#### 4.2 Deploy to Cluster
-
-1. **Start Minikube:**
-   ```bash
-   minikube start
-   ```
-
-2. **Apply Manifests:**
-   ```bash
-   kubectl apply -f deployment.yaml
-   kubectl apply -f service.yaml
-   ```
-
-3. **Access the Service:**
-   ```bash
-   minikube service file-store-service
-   ```
-
----
-
-### Step 5: Verify and Test
-
-1. **Test Endpoints:**
-   Use `curl` or Postman to interact with the service.
-
-2. **Client Interaction:**
-   Point the CLI client to the Kubernetes service URL.
-
----
-
-## Bonus
-
-1. **Git Best Practices:**
-   - Use meaningful commit messages.
-   - Ensure commits show incremental progress.
-
-2. **Parallel Processing:**
-   Optimize file operations to handle large datasets efficiently.
-
-3. **Resilience:**
-   Implement retry mechanisms for network interruptions.
-
----
-
-## Repository Structure
-
-```
-file-store-service/
-├── client/
-│   ├── cli.py
-│   └── requirements.txt
-├── server/
-│   ├── app.py
-│   └── requirements.txt
-├── deployment.yaml
-├── service.yaml
-├── Dockerfile
-└── README.md
+Install dependencies:
+```bash
+pip install -r requirements.txt
 ```
 
 ---
 
-## Next Steps
+### Installation
 
-1. Push all code, configurations, and documentation to a GitHub repository.
-2. Share the repository link with reviewers.
-3. Schedule a discussion to present the solution.
+1. Clone the repository:
+    ```bash
+    git clone https://github.com/omdeshmukh24/Filestore.git
+    cd Filestore
+    ```
+
+2. (Optional) Set up a virtual environment:
+    ```bash
+    python3 -m venv venv
+    source venv/bin/activate  # On Windows use: venv\Scripts\activate
+    ```
+
+3. Install the dependencies:
+    ```bash
+    pip install -r requirements.txt
+    ```
+
+4. Run the server:
+    ```bash
+    python server.py
+    ```
+
+The server will start and listen on port 5000. Access it at [http://127.0.0.1:5000](http://127.0.0.1:5000).
+
+---
+
+### API Endpoints
+
+#### Add Files
+**POST** `/files/add`
+
+Upload a file to the server.
+
+**Request:**
+```bash
+curl -X POST -F "file=@file1.txt" http://127.0.0.1:5000/files/add
+```
+**Response:**
+```json
+{"message": "File added successfully"}
+```
+
+#### List Files
+**GET** `/files/list`
+
+List all files stored on the server.
+
+**Request:**
+```bash
+curl http://127.0.0.1:5000/files/list
+```
+**Response:**
+```json
+{"files": ["file1.txt", "file2.txt"]}
+```
+
+#### Remove File
+**DELETE** `/files/remove`
+
+Remove a file from the server.
+
+**Request:**
+```bash
+curl -X DELETE -d "file=file1.txt" http://127.0.0.1:5000/files/remove
+```
+**Response:**
+```json
+{"message": "File removed successfully"}
+```
+
+#### Update File
+**PUT** `/files/update`
+
+Update the content of an existing file or add it if it doesn’t exist.
+
+**Request:**
+```bash
+curl -X PUT -F "file=@file1.txt" http://127.0.0.1:5000/files/update
+```
+**Response:**
+```json
+{"message": "File updated successfully"}
+```
+
+#### Word Count
+**GET** `/files/stats`
+
+Get the total word count of all files stored.
+
+**Request:**
+```bash
+curl http://127.0.0.1:5000/files/stats
+```
+**Response:**
+```json
+{"total_words": 150}
+```
+
+#### Frequent Words
+**GET** `/files/freq-words`
+
+Get the most frequent words across all files.
+
+**Request:**
+```bash
+curl http://127.0.0.1:5000/files/freq-words
+```
+**Response:**
+```json
+{"words": [{"word": "the", "count": 15}, {"word": "is", "count": 12}]}
+```
+
+---
+
+## Part 2: Kubernetes/OpenShift Deployment
+
+### Overview
+
+In this part, the goal is to deploy the File Store Service on a Kubernetes or OpenShift cluster. This involves using Minikube or kind for local clusters, and Kubernetes manifests to deploy the application.
+
+### Requirements for Deployment
+
+- Minikube or kind for creating a local Kubernetes cluster.
+- kubectl to interact with the cluster.
+- Docker to build container images.
+
+---
+
+### Steps for Kubernetes Deployment
+
+#### 1. Set up Kubernetes Cluster with Minikube
+
+1. **Install Minikube**: Follow the instructions on [Minikube documentation](https://minikube.sigs.k8s.io/docs/).
+2. **Start Minikube**:
+    ```bash
+    minikube start
+    ```
+
+#### 2. Build Docker Image
+
+Build the Docker image for the file store service:
+```bash
+docker build -t filestore-service .
+```
+
+#### 3. Create Kubernetes Manifests
+
+Create `deployment.yaml` and `service.yaml` to deploy the service.
+
+**Example `deployment.yaml`:**
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: filestore-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: filestore-service
+  template:
+    metadata:
+      labels:
+        app: filestore-service
+    spec:
+      containers:
+      - name: filestore-service
+        image: filestore-service
+        ports:
+        - containerPort: 5000
+```
+
+**Example `service.yaml`:**
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: filestore-service
+spec:
+  selector:
+    app: filestore-service
+  ports:
+  - protocol: TCP
+    port: 5000
+    targetPort: 5000
+  type: LoadBalancer
+```
+
+#### 4. Deploy to Kubernetes
+
+Apply the manifests to deploy the service:
+```bash
+kubectl apply -f deployment.yaml
+kubectl apply -f service.yaml
+```
+
+#### 5. Access the Application
+
+Use `kubectl` to find the external IP or use port-forwarding to access the service:
+```bash
+kubectl port-forward svc/filestore-service 5000:5000
+```
+
+---
+
+### Dockerization (Optional)
+
+Run the service as a Docker container using the following steps:
+
+1. **Build the Docker image:**
+    ```bash
+    docker build -t filestore-service .
+    ```
+
+2. **Run the Docker container:**
+    ```bash
+    docker run -p 5000:5000 filestore-service
+    ```
+
+The service will be available at [http://localhost:5000](http://localhost:5000).
